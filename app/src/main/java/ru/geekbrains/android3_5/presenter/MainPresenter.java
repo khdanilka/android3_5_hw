@@ -1,15 +1,14 @@
 package ru.geekbrains.android3_5.presenter;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 import io.reactivex.Scheduler;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+import ru.geekbrains.android3_5.model.cache.ActiveAndroidCache;
 import ru.geekbrains.android3_5.model.entity.User;
-import ru.geekbrains.android3_5.model.repo.ActiveAndroidUserRepo;
-import ru.geekbrains.android3_5.model.repo.IUserRepo;
-import ru.geekbrains.android3_5.model.repo.PaperUserRepo;
-import ru.geekbrains.android3_5.model.repo.RealmUserRepo;
+import ru.geekbrains.android3_5.model.repo.DMInterface;
+import ru.geekbrains.android3_5.model.repo.DataManager;
 import ru.geekbrains.android3_5.view.MainView;
 import ru.geekbrains.android3_5.view.RepoRowView;
 
@@ -19,7 +18,7 @@ public class MainPresenter implements IRepoListPresenter
     private static final String TAG = "MainPresenter";
     private MainView view;
     private Scheduler scheduler;
-    private IUserRepo userRepo;
+    private DMInterface userRepo;
 
     private User user;
 
@@ -27,9 +26,10 @@ public class MainPresenter implements IRepoListPresenter
     {
         this.view = view;
         this.scheduler = scheduler;
-        userRepo = new RealmUserRepo();
+        userRepo = new DataManager(new ActiveAndroidCache());
     }
 
+    @SuppressLint("CheckResult")
     public void loadInfo()
     {
         userRepo.getUser("SupNacho")
