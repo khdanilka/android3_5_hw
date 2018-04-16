@@ -7,10 +7,48 @@ import io.reactivex.Observable;
 import io.realm.Realm;
 import ru.geekbrains.android3_5.model.entity.Repository;
 import ru.geekbrains.android3_5.model.entity.User;
+import ru.geekbrains.android3_5.model.entity.realm.RealmPhoto;
 import ru.geekbrains.android3_5.model.entity.realm.RealmRepository;
 import ru.geekbrains.android3_5.model.entity.realm.RealmUser;
 
 public class RealmCache implements CacheInterface {
+
+
+    public String isOnRealm(String url){
+
+        String retString = null;
+        Realm realm = Realm.getDefaultInstance();
+        RealmPhoto realmPhoto = realm.where(RealmPhoto.class).equalTo("url", url).findFirst();
+        if (realmPhoto!= null){
+            retString = realmPhoto.getPathToPhoto();
+        }
+        realm.close();
+        return retString;
+    }
+
+
+    public void addImagePath(String url, String path){
+
+        Realm realm = Realm.getDefaultInstance();
+        RealmPhoto realmPhoto = realm.where(RealmPhoto.class).equalTo("url", url).findFirst();
+        if(realmPhoto == null)
+        {
+            realm.executeTransaction(innerRealm ->
+            {
+                RealmPhoto newRealmPhoto= realm.createObject(RealmPhoto.class, url);
+                newRealmPhoto.setPathToPhoto(path);
+            });
+        }
+        else
+        {
+            realm.executeTransaction(innerRealm -> realmPhoto.setPathToPhoto(path));
+        }
+
+        realm.close();
+
+    }
+
+
 
     @Override
     public void addUserToCache(User user) {
@@ -40,10 +78,12 @@ public class RealmCache implements CacheInterface {
         RealmUser realmUser = realm.where(RealmUser.class).equalTo("login", user.getLogin()).findFirst();
         if(realmUser == null)
         {
-            realm.executeTransaction(innerRealm ->
-            {
-                RealmUser newRealmUser = realm.createObject(RealmUser.class, user.getLogin());
-                newRealmUser.setAvatarUrl(user.getAvatarUrl());
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm innerRealm) {
+                    RealmUser newRealmUser = realm.createObject(RealmUser.class, user.getLogin());
+                    newRealmUser.setAvatarUrl(user.getAvatarUrl());
+                }
             });
         }
 
